@@ -137,6 +137,16 @@ function levenshtein(a, b){
 			//Could be either match
 			track.specialSuffix = typeof(match[2]) === 'undefined' ? match[3] : match[2];
 		}
+		//More?
+		if ((match = name.match(SPECIAL_SUFFIX_REGEX)) !== null) {
+			track.specialSuffixes = [track.specialSuffix];
+			while ((match = name.match(SPECIAL_SUFFIX_REGEX)) !== null) {
+				//Also sometimes people put special things in [brackets] or in ** double asterisks **
+				name = name.replace(SPECIAL_SUFFIX_REGEX, '');
+				//Could be either match
+				track.specialSuffixes.push(typeof(match[2]) === 'undefined' ? match[3] : match[2]);
+			}
+		}
 
 		if ((match = name.match(MIX_SUFFIX_REGEX)) !== null) {
 			//Also clean off any - Mix stuff
@@ -167,7 +177,7 @@ function levenshtein(a, b){
 	var savedLibrary;
 	function findExtendedMix(track) {
 		return new Promise(function(accept, reject) {
-			loadPlaylist(api.searchTracks.bind(api, track.name + ' ' + track.artists[0].name), 100).then(function(tracks) {
+			loadPlaylist(api.searchTracks.bind(api, 'track:' + track.name + ' artist:' + track.artists[0].name), 100).then(function(tracks) {
 				//This would be super useless if the extended mix gave you a radio track
 				tracks = tracks.filter(function(track) {
 					return !isRadioTrack(track);
@@ -200,6 +210,7 @@ function levenshtein(a, b){
 						case 'Extended Remix':
 						case 'Club Mix':
 						case 'Club Remix':
+						case 'Radio Edit':
 						case '':
 							//See if any of those work
 							test = filterMixSuffix(tracks, 'Original Mix'); if (test.length > 0) return test;
@@ -213,25 +224,32 @@ function levenshtein(a, b){
 							break;
 					}
 
-					function cleanedFilterMixSuffix(tracks, mixSuffix) {
-						//Try to find one with the same mix
-						return tracks.filter(function(testTrack) {
-							return testTrack.mixSuffix.replace(NON_ALPHA_REGEX, '').toLowerCase() ===
-								mixSuffix.replace(NON_ALPHA_REGEX, '').toLowerCase();
+					function replaceMulti(str, replacements) {
+						var replaced = str;
+						replacements.forEach(function(replacement) {
+							replaced = replaced.replace(replacement, '');
 						});
+						return replaced;
 					}
+
+					//Try erasing 'Mix'/'Remix'
+					mix = replaceMulti(mix, [' Remix', ' Mix', ' Bootleg']);
+					tracks = tracks.map(function(track) {
+						track.mixSuffix = replaceMulti(track.mixSuffix, [' Remix', ' Mix', ' Bootleg']);
+						return track;
+					});
+
+					test = filterMixSuffix(tracks, mix); if (test.length > 0) return test;
 
 					//We've still got nothing. Try cleaning up the name some
-					test = cleanedFilterMixSuffix(tracks, mix); if (test.length > 0) return test;
-					//Try swapping 'Mix' with 'Remix'
-					if (mix.search(/ Remix/) !== null) {
-						test = cleanedFilterMixSuffix(tracks, mix.replace(' Remix', ' Mix')); if (test.length > 0) return test;
-					}
-					if (mix.search(/ Mix/) !== null) {
-						test = cleanedFilterMixSuffix(tracks, mix.replace(' Mix', ' Remix')); if (test.length > 0) return test;
-					}
+					mix = mix.replace(NON_ALPHA_REGEX, '').toLowerCase();
+					tracks = tracks.map(function(track) {
+						track.mixSuffix = track.mixSuffix.replace(NON_ALPHA_REGEX, '').toLowerCase();
+						return track;
+					});
+					test = filterMixSuffix(tracks, mix); if (test.length > 0) return test;
 
-					function levenshteinFilterMixSuffix(tracks, mixSuffix, distance) {
+					function levenshteinFilterMixSuffix(tracks, mixSuffix, distance, ignores) {
 						//Try to find one with the same mix
 						return tracks.filter(function(testTrack) {
 							return levenshtein(
@@ -253,6 +271,13 @@ function levenshtein(a, b){
 					accept();
 					return;
 				}
+
+				//Revert the changes that selection caused
+				tracks.map(function(track) {
+					track.name = track.radioName;
+					extractName(track);
+					return track;
+				});
 
 				//Sort by length since we want the longest track
 				tracks.sort(function(a, b) {
