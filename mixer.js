@@ -1,3 +1,31 @@
+Array.prototype.diff = function(a) {
+	return this.filter(function(i) {
+		return a.indexOf(i) < 0;
+	});
+};
+
+//https://gist.github.com/andrei-m/982927
+function levenshtein(a, b){
+	var tmp;
+	if (a.length === 0) { return b.length; }
+	if (b.length === 0) { return a.length; }
+	if (a.length > b.length) { tmp = a; a = b; b = tmp; }
+
+	var i, j, res, alen = a.length, blen = b.length, row = new Array(alen);
+	for (i = 0; i <= alen; i++) { row[i] = i; }
+
+	for (i = 1; i <= blen; i++) {
+		res = i;
+		for (j = 1; j <= alen; j++) {
+			tmp = row[j - 1];
+			row[j - 1] = res;
+			res = b[i - 1] === a[j - 1] ? tmp : Math.min(tmp + 1, Math.min(res + 1, row[j] + 1));
+		}
+	}
+	return res;
+}
+
+
 (function($) {
 	//Init Spotify api
 	var api = new SpotifyWebApi();
@@ -54,15 +82,11 @@
 		});
 	}
 
-	Array.prototype.diff = function(a) {
-		return this.filter(function(i) {
-			return a.indexOf(i) < 0;
-		});
-	};
 
 	var ALBUM_SUFFIX_REGEX = /[\[\(]([A-Z]+\s*\d*( - Part \d+)?)[\]\)]/;
 	var SPECIAL_SUFFIX_REGEX = /([\[\(](.*?)[\]\)]|\*\*(.*?)\*\*)/;
 	var MIX_SUFFIX_REGEX = / - (.*)/;
+	var NON_ALPHA_REGEX = /[^a-zA-Z]/g;
 
 	function isRadioTrack(track) {
 		//What counts as a "radio song"?
@@ -153,40 +177,81 @@
 					extractName(track);
 					return track;
 				});
+				//In case something has the name of an album
+				tracks.filter(function(testTrack) {
+					return testTrack.name.toLowerCase() === track.name.toLowerCase();
+				});
 
-				function filterMixSuffix(tracks, mixSuffix) {
-					//Try to find one with the same mix
-					return tracks.filter(function(testTrack) {
-						return testTrack.mixSuffix.toLowerCase() === mixSuffix.toLowerCase();
-					});
-				}
-				if (filterMixSuffix(tracks, track.mixSuffix).length > 0) {
-					tracks = filterMixSuffix(tracks, track.mixSuffix);
-				} else {
+				//Try to match the mix so we get the right version
+				tracks = function() {
+					function filterMixSuffix(tracks, mixSuffix) {
+						//Try to find one with the same mix
+						return tracks.filter(function(testTrack) {
+							return testTrack.mixSuffix.toLowerCase() === mixSuffix.toLowerCase();
+						});
+					}
+
+					var mix = track.mixSuffix;
+					var test = filterMixSuffix(tracks, mix); if (test.length > 0) return test;
 					//Hm nothing with that mix is found. What else can we look for?
-					switch (track.mixSuffix) {
+					switch (mix) {
 						case 'Original Mix':
 						case 'Extended Mix':
+						case 'Extended Remix':
+						case 'Club Mix':
+						case 'Club Remix':
 						case '':
 							//See if any of those work
-							if (filterMixSuffix(tracks, 'Original Mix').length > 0) {
-								tracks = filterMixSuffix(tracks, 'Original Mix');
-								break;
-							} else if (filterMixSuffix(tracks, 'Extended Mix').length > 0) {
-								tracks = filterMixSuffix(tracks, 'Extended Mix');
-								break;
-							} else if (filterMixSuffix(tracks, '').length > 0) {
-								tracks = filterMixSuffix(tracks, '');
-								break;
-							} else {
-								//No clue
-								accept();
-								return;
-							}
+							test = filterMixSuffix(tracks, 'Original Mix'); if (test.length > 0) return test;
+							test = filterMixSuffix(tracks, 'Extended Mix'); if (test.length > 0) return test;
+							test = filterMixSuffix(tracks, 'Extended Remix'); if (test.length > 0) return test;
+							test = filterMixSuffix(tracks, 'Club Mix'); if (test.length > 0) return test;
+							test = filterMixSuffix(tracks, 'Club Remix'); if (test.length > 0) return test;
+							test = filterMixSuffix(tracks, ''); if (test.length > 0) return test;
+							break;
 						default:
-							//No clue
-							accept();
+							break;
 					}
+
+					function cleanedFilterMixSuffix(tracks, mixSuffix) {
+						//Try to find one with the same mix
+						return tracks.filter(function(testTrack) {
+							return testTrack.mixSuffix.replace(NON_ALPHA_REGEX, '').toLowerCase() ===
+								mixSuffix.replace(NON_ALPHA_REGEX, '').toLowerCase();
+						});
+					}
+
+					//We've still got nothing. Try cleaning up the name some
+					test = cleanedFilterMixSuffix(tracks, mix); if (test.length > 0) return test;
+					//Try swapping 'Mix' with 'Remix'
+					if (mix.search(/ Remix/) !== null) {
+						test = cleanedFilterMixSuffix(tracks, mix.replace(' Remix', ' Mix')); if (test.length > 0) return test;
+					}
+					if (mix.search(/ Mix/) !== null) {
+						test = cleanedFilterMixSuffix(tracks, mix.replace(' Mix', ' Remix')); if (test.length > 0) return test;
+					}
+
+					function levenshteinFilterMixSuffix(tracks, mixSuffix, distance) {
+						//Try to find one with the same mix
+						return tracks.filter(function(testTrack) {
+							return levenshtein(
+								testTrack.mixSuffix.replace(NON_ALPHA_REGEX, '').toLowerCase(),
+								mixSuffix.replace(NON_ALPHA_REGEX, '').toLowerCase()
+							) < distance;
+						});
+					}
+
+					//Catches that one time Armin misspelled Balearic
+					test = levenshteinFilterMixSuffix(tracks, mix, 1); if (test.length > 0) return test;
+					test = levenshteinFilterMixSuffix(tracks, mix, 3); if (test.length > 0) return test;
+
+					//Nope
+					return [];
+				}();
+
+				if (tracks.length === 0) {
+					accept();
+					return;
 				}
 
 				//Sort by length since we want the longest track
@@ -264,8 +329,9 @@
 					if (typeof(track) === 'undefined') {
 						$trackRow.children('.extended-link').children('a').text('No Extended Version');
 					} else {
-						$trackRow.children('.extended-link').children('a').text('Extended Version');
-						$trackRow.children('.extended-link').children('a').attr('href', getOpenURL(track.uri));
+						$trackRow.remove();
+						// $trackRow.children('.extended-link').children('a').text('Extended Version');
+						// $trackRow.children('.extended-link').children('a').attr('href', getOpenURL(track.uri));
 					}
 
 					return _findExtendedList(accept, reject);
