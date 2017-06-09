@@ -160,7 +160,7 @@ function levenshtein(a, b){
 		}
 		return out;
 	});
-	Handlebars.registerHelper('track-url', function(uri, options) {
+	Handlebars.registerHelper('track-url', function(uri) {
 		return getOpenURL(uri);
 	});
 
