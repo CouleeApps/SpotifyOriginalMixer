@@ -110,6 +110,13 @@ var SpotifyWebApi = (function() {
 
           if (req.status >= 200 && req.status < 300) {
             success(data);
+          } else if (req.status === 429) {
+            req.abort();
+            setTimeout(function() {
+              _promiseProvider(promiseFunction.bind(null, success, failure), function() {
+                req.abort();
+              });
+            }, 1000);
           } else {
             failure();
           }

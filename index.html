@@ -47,24 +47,29 @@
     <script src="thirdparty/spotify-web-api.js"></script>
 
     <div class="row">
-        <div class="col-md-8 col-lg-8 col-xl-8" id="radio"></div>
-        <div class="col-md-4 col-lg-4 col-xl-4" id="non-radio"></div>
+        <div class="col-md-12 col-lg-12 col-xl-12" id="radio"></div>
+        <!--<div class="col-md-4 col-lg-4 col-xl-4" id="non-radio"></div>-->
     </div>
 
     <script id="radio-list-template" type="text/x-handlebars-template">
         {{#list tracks}}
-        <div class="row">
-            <div class="col-md-6 col-lg-6 col-xl-6">{{name}}</div>
-            <div class="col-md-6 col-lg-6 col-xl-6">{{mixSuffix}}</div>
+        <div class="row" id="track-{{id}}">
+            <div class="col-md-4 col-lg-4 col-xl-4">{{name}}</div>
+            <div class="col-md-4 col-lg-4 col-xl-4">{{mixSuffix}}</div>
+            <div class="col-md-4 col-lg-4 col-xl-4 extended-link">
+                <a href="{{#track-url uri}}{{/track-url}}">Radio Version</a>
+            </div>
         </div>
         {{/list}}
     </script>
 
+    <!--
     <script id="non-radio-list-template" type="text/x-handlebars-template">
         {{#list tracks}}
         <div>{{name}}</div>
         {{/list}}
     </script>
+    -->
 
     <script src="mixer.js"></script>
 </body>
