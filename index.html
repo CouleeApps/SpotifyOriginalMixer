@@ -4,18 +4,7 @@
     <meta charset="UTF-8">
     <title>Original Mixer</title>
 
-    <!-- jQuery -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
-
-    <!-- Bootstrap -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-
-    <!-- Handlebars -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.10/handlebars.min.js"></script>
-</head>
-<body>
+    <!-- This mixer is completely useless if you can't auth -->
     <script>
         var NEED_AUTH = 'no_token';
 
@@ -43,34 +32,64 @@
             window.location.href = 'login.html';
         }
     </script>
+
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+    <!-- Handlebars -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.10/handlebars.min.js"></script>
+
+    <!-- Libraries -->
     <script src="thirdparty/q.js"></script>
     <script src="thirdparty/spotify-web-api.js"></script>
+    <script src="util.js"></script>
 
-    <div class="row">
-        <div class="col-md-12 col-lg-12 col-xl-12" id="radio"></div>
-        <!--<div class="col-md-4 col-lg-4 col-xl-4" id="non-radio"></div>-->
+    <!-- Mixer base -->
+    <script src="playlist.js"></script>
+    <script src="track.js"></script>
+    <link rel="stylesheet" href="mixer.css">
+</head>
+<body>
+    <div class="content">
+        <div id="controls">
+            <button id="extend" class="btn btn-success hidden">Find Extended Mixes</button>
+            <button id="create-playlist" class="btn btn-primary hidden">Create Extended Playlist</button>
+            <a href="#" id="open-playlist" class="btn btn-primary hidden">Open Extended Playlist</a>
+        </div>
+        <div id="found-radio"></div>
     </div>
 
+    <!-- Templates -->
     <script id="radio-list-template" type="text/x-handlebars-template">
-        {{#list tracks}}
-        <div class="row" id="track-{{id}}">
-            <div class="col-md-4 col-lg-4 col-xl-4">{{name}}</div>
-            <div class="col-md-4 col-lg-4 col-xl-4">{{mixSuffix}}</div>
-            <div class="col-md-4 col-lg-4 col-xl-4 extended-link">
-                <a href="{{#track-url uri}}{{/track-url}}">Radio Version</a>
+        {{#each tracks}}
+        <div class="track" id="track-{{id}}">
+            <div class="track-info">
+                <img class="album-image" src="{{#album-image 64}}{{/album-image}}" alt="{{album.name}}">
+                <span class="track-name">{{name}}</span>
+            </div>
+            <div class="spacer"></div>
+            <div class="radio-version">
+                <a class="track-link" href="{{#track-url uri}}{{/track-url}}">Radio</a>
+            </div>
+            <div class="extended-version loading">
+                <span class="preview-text loading">Extended</span>
+                <a class="hidden track-link" href="{{#track-url extended-uri}}{{/track-url}}">Extended</a>
             </div>
         </div>
-        {{/list}}
+        {{/each}}
     </script>
-
-    <!--
     <script id="non-radio-list-template" type="text/x-handlebars-template">
-        {{#list tracks}}
+        {{#each tracks}}
         <div>{{name}}</div>
-        {{/list}}
+        {{/each}}
     </script>
-    -->
 
+    <!-- Scripts at the end so the DOM exists for them -->
     <script src="mixer.js"></script>
 </body>
 </html>
