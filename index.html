@@ -59,34 +59,53 @@
         <div id="controls">
             <button id="extend" class="btn btn-success hidden">Find Extended Mixes</button>
             <button id="create-playlist" class="btn btn-primary hidden">Create Extended Playlist</button>
+            <button id="overwrite-playlist" class="btn btn-primary hidden">Overwrite Playlist</button>
             <a href="#" id="open-playlist" class="btn btn-primary hidden">Open Extended Playlist</a>
+            Show:
+            <label for="show-extended"><input type="checkbox" id="show-extended" checked> Has Extended</label>
+            <label for="show-radio"><input type="checkbox" id="show-radio" checked> Has Radio</label>
+            <label for="show-failed"><input type="checkbox" id="show-failed" checked> Failed</label>
         </div>
         <div id="found-radio"></div>
     </div>
 
     <!-- Templates -->
     <script id="radio-list-template" type="text/x-handlebars-template">
-        {{#each tracks}}
-        <div class="track" id="track-{{id}}">
+        {{#if failed}}
+            <div class="track unfound" id="track-{{id}}">
+        {{else}}
+            <div class="track" id="track-{{id}}">
+        {{/if}}
             <div class="track-info">
-                <img class="album-image" src="{{#album-image 64}}{{/album-image}}" alt="{{album.name}}">
+                <img class="album-image" src="{{album-image 64}}" alt="{{album.name}}">
                 <span class="track-name">{{name}}</span>
+                <span class="track-mix">{{mixSuffix}}</span>
+                {{#each-list artists}}
+                    <span class="track-artist">{{name}}, </span>
+                {{else}}
+                    <span class="track-artist">{{name}}</span>
+                {{/each-list}}
             </div>
             <div class="spacer"></div>
-            <div class="radio-version">
-                <a class="track-link" href="{{#track-url uri}}{{/track-url}}">Radio</a>
-            </div>
-            <div class="extended-version loading">
-                <span class="preview-text loading">Extended</span>
-                <a class="hidden track-link" href="{{#track-url extended-uri}}{{/track-url}}">Extended</a>
-            </div>
+            {{#if hasRadio}}
+                <div class="radio-version">
+                    <a class="track-link" href="{{track-url radioUri}}">Radio</a>
+                </div>
+            {{else}}
+                <div class="radio-version loading">
+                    <span class="track-link">Radio</span>
+                </div>
+            {{/if}}
+            {{#if hasExtended}}
+                <div class="extended-version">
+                    <a class="track-link" href="{{track-url uri}}">Extended</a>
+                </div>
+            {{else}}
+                <div class="extended-version loading">
+                    <span class="preview-text">Extended</span>
+                </div>
+            {{/if}}
         </div>
-        {{/each}}
-    </script>
-    <script id="non-radio-list-template" type="text/x-handlebars-template">
-        {{#each tracks}}
-        <div>{{name}}</div>
-        {{/each}}
     </script>
 
     <!-- Scripts at the end so the DOM exists for them -->

@@ -38,6 +38,9 @@ body {
 .track-name {
     font-size: 1.25em;
 }
+.track-artist {
+    font-weight: bold;
+}
 .album-image {
     width: 32px;
     height: 32px;
@@ -52,6 +55,10 @@ body {
     background-color: #2233bb;
     font-size: 1.1em;
 }
+.radio-version.loading {
+    background-color: #bbccff;
+    font-size: 1.1em;
+}
 .extended-version {
     background-color: #22bb33;
     font-size: 1.1em;
@@ -60,6 +67,9 @@ body {
 }
 .radio-version:hover {
     background-color: #4455ee;
+}
+.radio-version.loading:hover {
+    background-color: #ccddff;
 }
 .extended-version:hover {
     background-color: #44ee55;

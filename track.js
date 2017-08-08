@@ -19,6 +19,11 @@ function isRadioTrack(track) {
 	// [SHOW 123] / (SHOW123)
 	//Roughly. Ymmv.
 
+	//Already figured this one out
+	if (track.extracted) {
+		return track.radio;
+	}
+
 	if (track.name.match(ALBUM_SUFFIX_REGEX) !== null) {
 		return true;
 	}
@@ -35,7 +40,13 @@ function isRadioTrack(track) {
 }
 
 function extractName(track) {
+	if (track.extracted) {
+		return;
+	}
+
+	track.radio = isRadioTrack(track);
 	track.radioName = track.name;
+	track.extracted = true;
 
 	var name = track.name;
 	var match;

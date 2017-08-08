@@ -4,6 +4,18 @@ Array.prototype.diff = function(a) {
 	});
 };
 
+Handlebars.registerHelper('each-list', function(list, options) {
+	var ret = '';
+	for (var i = 0, j = list.length; i < j; i ++) {
+		if (i === j - 1) {
+			ret = ret + options.inverse(list[i]);
+		} else {
+			ret = ret + options.fn(list[i]);
+		}
+	}
+	return ret;
+});
+
 //https://gist.github.com/andrei-m/982927
 function levenshtein(a, b){
 	var tmp;
@@ -106,9 +118,7 @@ Q.map = function(array, fn, progress) {
 		}, reject);
 	}
 
-	return new Promise(function(accept, reject) {
-		return _map(accept, reject);
-	});
+	return new Promise(_map);
 };
 
 /**
@@ -133,9 +143,7 @@ Q.forEach = function(array, fn) {
 		}, reject);
 	}
 
-	return new Promise(function(accept, reject) {
-		return _foreach(accept, reject);
-	});
+	return new Promise(_foreach);
 };
 
 Array.prototype.chunk = function(count) {
