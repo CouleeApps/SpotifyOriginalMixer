@@ -1,11 +1,9 @@
+var NON_ALPHA_REGEX = /[^a-zA-Z]/g;
+
 function findExtendedMix(api, radioTrack) {
 	return new Promise(function(accept, reject) {
-		//This one is already loaded, so we're done
-		if (!radioTrack.radio) {
-			accept(radioTrack);
-			return;
-		}
-		loadList(api.searchTracks.bind(api, 'track:' + radioTrack.name + ' artist:' + radioTrack.artists[0].name), 100).then(function(searchTracks) {
+		var query = 'track:' + radioTrack.name + ' artist:' + radioTrack.artists[0].name;
+		loadList(api.searchTracks.bind(api, query), 100).then(function(searchTracks) {
 			//This would be super useless if the extended mix gave you a radio track
 			searchTracks = searchTracks.filter(function(track) {
 				return !isRadioTrack(track);
@@ -32,25 +30,31 @@ function findExtendedMix(api, radioTrack) {
 				}
 
 				var mix = radioTrack.mixSuffix;
-				var test = filterMixSuffix(searchTracks, mix); if (test.length > 0) return test;
-				//Hm nothing with that mix is found. What else can we look for?
+				var test;
 				switch (mix) {
 					case 'Original Mix':
 					case 'Extended Mix':
 					case 'Extended Remix':
-					case 'Club Mix':
-					case 'Club Remix':
+					case 'Extended Version': //Armin stop
+					case 'Extended': //Ferry Corsten why have you done this
 					case 'Radio Edit':
 					case '':
 						//See if any of those work
 						test = filterMixSuffix(searchTracks, 'Original Mix'); if (test.length > 0) return test;
 						test = filterMixSuffix(searchTracks, 'Extended Mix'); if (test.length > 0) return test;
 						test = filterMixSuffix(searchTracks, 'Extended Remix'); if (test.length > 0) return test;
-						test = filterMixSuffix(searchTracks, 'Club Mix'); if (test.length > 0) return test;
-						test = filterMixSuffix(searchTracks, 'Club Remix'); if (test.length > 0) return test;
+						test = filterMixSuffix(searchTracks, 'Extended Version'); if (test.length > 0) return test;
+						test = filterMixSuffix(searchTracks, 'Extended'); if (test.length > 0) return test;
 						test = filterMixSuffix(searchTracks, ''); if (test.length > 0) return test;
 						break;
+					case 'Club Mix':
+					case 'Club Remix':
+						//Not the same as Original Mix
+						test = filterMixSuffix(searchTracks, 'Club Mix'); if (test.length > 0) return test;
+						test = filterMixSuffix(searchTracks, 'Club Remix'); if (test.length > 0) return test;
+						break;
 					default:
+						test = filterMixSuffix(searchTracks, mix); if (test.length > 0) return test;
 						break;
 				}
 
@@ -63,9 +67,9 @@ function findExtendedMix(api, radioTrack) {
 				}
 
 				//Try erasing 'Mix'/'Remix'
-				mix = replaceMulti(mix, [' Remix', ' Mix', ' Bootleg']);
+				mix = replaceMulti(mix, [' Remix', ' Mix', ' Bootleg', ' Version', ' Edit']);
 				searchTracks = searchTracks.map(function(track) {
-					track.testMixSuffix = replaceMulti(track.testMixSuffix, [' Remix', ' Mix', ' Bootleg']);
+					track.testMixSuffix = replaceMulti(track.testMixSuffix, [' Remix', ' Mix', ' Bootleg', ' Version', ' Edit']);
 					return track;
 				});
 
@@ -123,6 +127,11 @@ function findExtendedMix(api, radioTrack) {
 				}
 				return 0;
 			});
+
+			if (searchTracks[0].uri === radioTrack.uri) {
+				//Hey we're the best we can get!
+				accept(radioTrack);
+			}
 
 			//Pick the best one
 			accept(searchTracks[0]);

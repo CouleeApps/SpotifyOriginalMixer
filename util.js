@@ -37,7 +37,7 @@ function levenshtein(a, b){
 	return res;
 }
 
-function loadList(cb, max, offset) {
+function loadList(cb, max, offset, progress) {
 	//Start at the start if we don't care
 	if (typeof(offset) === 'undefined') {
 		offset = 0;
@@ -74,6 +74,12 @@ function loadList(cb, max, offset) {
 			if (limit <= 0) {
 				return accept(list);
 			}
+
+			//Progress update event
+			if (typeof(progress) !== 'undefined') {
+				progress(offset / max);
+			}
+
 			//And send it off (async recursion woo)
 			return _loadPart(accept, reject, offset, limit, max);
 		}, reject);

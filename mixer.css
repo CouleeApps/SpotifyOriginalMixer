@@ -5,12 +5,30 @@ html, body {
     padding: 0;
 }
 body {
-    background-color: #eeeeee;
+    background-color: #121212;
+    color: #ffffff;
 }
 .content {
-    margin: 0 auto;
-    max-width: 1024px;
-    padding: 0 15px;
+    display: flex;
+    flex-direction: row;
+    padding: 15px;
+    height: 100%;
+    width: 100%;
+}
+.playlist-list {
+    display: flex;
+    flex-direction: column;
+    flex-basis: 300px;
+}
+.playlist {
+    padding: 2px;
+}
+.playlist.selected {
+    color: #fff;
+    background-color: #444;
+}
+.track-list-container {
+    flex-basis: 100%;
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -23,7 +41,7 @@ body {
 }
 .track {
     border-radius: 4px;
-    background-color: #ffffff;
+    background-color: #232323;
     margin: 1px 0;
     display: flex;
     flex-direction: row;
@@ -46,13 +64,13 @@ body {
     height: 32px;
 }
 .unfound {
-    color: #cccccc;
+    color: #888888;
 }
 .unfound .track-info .album-image {
     opacity: 0.30;
 }
 .radio-version {
-    background-color: #2233bb;
+    background-color: #1d54b9;
     font-size: 1.1em;
 }
 .radio-version.loading {
@@ -60,42 +78,50 @@ body {
     font-size: 1.1em;
 }
 .extended-version {
-    background-color: #22bb33;
+    background-color: #1db954;
     font-size: 1.1em;
     border-top-right-radius: 4px;
     border-bottom-right-radius: 4px;
 }
 .radio-version:hover {
-    background-color: #4455ee;
+    background-color: #1e60d7;
 }
-.radio-version.loading:hover {
-    background-color: #ccddff;
+.radio-version:active {
+    background-color: #143b83;
+}
+.radio-version.loading, .radio-version.loading:hover {
+    background-color: #233456;
 }
 .extended-version:hover {
-    background-color: #44ee55;
+    background-color: #1ed760;
+}
+.extended-version:active {
+    background-color: #14833b;
 }
 .extended-version.loading, .extended-version.loading:hover {
-    background-color: #ccffcc;
+    background-color: #235634;
 }
 .unfound .extended-version, .unfound .extended-version:hover {
     background-color: #bb3322;
 }
 .track-link, .preview-text {
-    color: #ffffff;
     display: block;
     padding: 9px 12px;
     width: 100%;
     height: 100%;
 }
-a.track-link:hover, a.track-link:active, a.track-link:focus {
+.radio-version .track-link, .radio-version .track-link:focus {
     color: #ffffff;
 }
-.preview-text.loading {
-    color: #cccccc;
+.extended-version .track-link, .extended-version .track-link:focus {
+    color: #ffffff;
+}
+.loading .track-link, .loading .preview-text {
+    color: #777777;
 }
 .unfound .extended-version .preview-text {
     color: #ffcccc;
 }
-#found-radio {
+#track-list {
     overflow: auto;
 }

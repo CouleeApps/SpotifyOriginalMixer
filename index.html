@@ -51,25 +51,44 @@
 
     <!-- Mixer base -->
     <script src="playlist.js"></script>
+    <script src="extend.js"></script>
     <script src="track.js"></script>
     <link rel="stylesheet" href="mixer.css">
 </head>
 <body>
     <div class="content">
-        <div id="controls">
-            <button id="extend" class="btn btn-success hidden">Find Extended Mixes</button>
-            <button id="create-playlist" class="btn btn-primary hidden">Create Extended Playlist</button>
-            <button id="overwrite-playlist" class="btn btn-primary hidden">Overwrite Playlist</button>
-            <a href="#" id="open-playlist" class="btn btn-primary hidden">Open Extended Playlist</a>
-            Show:
-            <label for="show-extended"><input type="checkbox" id="show-extended" checked> Has Extended</label>
-            <label for="show-radio"><input type="checkbox" id="show-radio" checked> Has Radio</label>
-            <label for="show-failed"><input type="checkbox" id="show-failed" checked> Failed</label>
+        <div class="playlist-list">
+
         </div>
-        <div id="found-radio"></div>
+        <div class="track-list-container">
+            <div id="controls">
+                <button id="extend" class="btn btn-success hidden">Find Extended Mixes</button>
+                <button id="create-playlist" class="btn btn-primary hidden">Create Extended Playlist</button>
+                <button id="overwrite-playlist" class="btn btn-primary hidden">Overwrite Playlist</button>
+                <a href="#" id="open-playlist" class="btn btn-primary hidden">Open Extended Playlist</a>
+                Show:
+                <label for="show-was-ext"><input type="checkbox" id="show-was-ext" checked> Was Extended</label>
+                <label for="show-has-ext"><input type="checkbox" id="show-has-ext" checked> Has Extended</label>
+            </div>
+            <div id="track-list">
+
+            </div>
+        </div>
     </div>
 
     <!-- Templates -->
+    <script id="loading-bar-template" type="text/x-handlebars-template">
+        <div class="progress">
+            <div class="progress-bar" style="width: 0" id="loadingProgress"></div>
+        </div>
+    </script>
+
+    <script id="playlist-list-template" type="text/x-handlebars-template">
+        <div class="playlist">
+            {{name}}
+        </div>
+    </script>
+
     <script id="radio-list-template" type="text/x-handlebars-template">
         {{#if failed}}
             <div class="track unfound" id="track-{{id}}">
@@ -93,7 +112,7 @@
                 </div>
             {{else}}
                 <div class="radio-version loading">
-                    <span class="track-link">Radio</span>
+                    <span class="preview-text">Radio</span>
                 </div>
             {{/if}}
             {{#if hasExtended}}
