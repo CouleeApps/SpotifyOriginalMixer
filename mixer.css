@@ -47,11 +47,19 @@ body {
     flex-direction: row;
     justify-content: space-between;
 }
-.spacer {
-    flex-grow: 10;
+.track-name {
+    flex-basis: 30%;
+}
+.track-mix {
+    flex-basis: 20%;
+}
+.track-artist {
+    flex-basis: 40%;
 }
 .track-info {
     padding: 4px;
+    flex-basis: 100%;
+    display: flex;
 }
 .track-name {
     font-size: 1.25em;
@@ -62,6 +70,7 @@ body {
 .album-image {
     width: 32px;
     height: 32px;
+    margin-right: 8px;
 }
 .unfound {
     color: #888888;

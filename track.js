@@ -1,7 +1,38 @@
-var ALBUM_SUFFIX_REGEX = /[\[\(]([A-Z]+\s*\d+( - Part \d+)?)[\]\)]/i;
-var SPECIAL_SUFFIX_REGEX = /([\[\(](.*?)[\]\)]|\*\*(.*?)\*\*)/;
-var MIX_SUFFIX_DASH_REGEX = / - (.*(mix|dub|version|edit|instrumental|bootleg|extended))$/i;
-var MIX_SUFFIX_PARENS_REGEX = /\(([^)]*(mix|dub|version|edit|instrumental|bootleg|extended))\)$/i;
+var ALBUM_SUFFIX_REGEX = /^([A-Z]+\s*\d+( - Part \d+)?)$/;
+
+var MIX_REGEXES = [
+	/mix$/i, //Also covers remix
+	/dub$/i,
+	/version$/i,
+	/edit$/i,
+	/bootleg$/i,
+	/cut$/i,
+	/mash( up)?$/i,
+	/instrumental$/i, //Gets a little weirder from here on down
+	/interpretation$/i,
+	/extended$/i, //Someone forgot "mix" on "extended mix"
+	/re-?vamp(ed)?$/i, //Re this re that how many of these can they think of
+	/re-?work$/i,
+	/re-?make$/i,
+	/re-?hash$/i,
+	/re-?touch$/i,
+	/re-?vival$/i,
+	/re-?construction$/i,
+	/re-?fill$/i,
+	/re-?mode$/i,
+	/re-?lift$/i,
+	/re-?pimp$/i, //Why
+	/re-?rerub$/i, //Stop
+	/re-?wiz/i, //Please
+	/touch$/i,
+	/ mix /i, //For when 'mix' isn't the last thing because we need more description
+	/ remix /i,
+	/fix$/i, //Nice
+	/mx$/i, //Good job you misspelled 'mix'
+	/play$/i, //Playmo - 1st Play
+	/mix(\s*\d+)$/i, //Alex M.O.R.P.H. Mix 1
+	/byte$/i //Second Byte - D-formations Third Byte
+];
 
 function isRadioTrack(track) {
 	//What counts as a "radio song"?
@@ -25,7 +56,11 @@ function isRadioTrack(track) {
 		return track.radio;
 	}
 
-	if (track.name.match(ALBUM_SUFFIX_REGEX) !== null) {
+	//If it has a radio show album in the name
+	var sectioned = getNameSections(track.name);
+	if (sectioned.sections.some(function(section) {
+			return section.match(ALBUM_SUFFIX_REGEX) !== null;
+		})) {
 		return true;
 	}
 
@@ -58,46 +93,140 @@ function extractName(track) {
 	track.radioName = track.name;
 	track.extracted = true;
 
-	var name = track.name;
+	//Sectionize the track's name and see what we can find
+	var sectioned = getNameSections(track.name);
+
+	//See if we can find a mix
+	var mixes = sectioned.sections.filter(function(section) {
+		return isMixType(section);
+	});
+	//Radio show albums
+	var albums = sectioned.sections.filter(function(section) {
+		return mixes.indexOf(section) === -1 && section.match(ALBUM_SUFFIX_REGEX) !== null;
+	});
+	//Everything else?
+	var specials = sectioned.sections.filter(function(section) {
+		return mixes.indexOf(section) === -1 && albums.indexOf(section) === -1;
+	});
+
+	track.mixSuffix = (mixes.length > 0 ? mixes[0] : '');
+	track.albumSuffix = (albums.length > 0 ? albums[0] : '');
+	track.specials = specials;
+
+	track.name = sectioned.name;
+}
+
+function isMixType(name) {
+	name = name.toLowerCase();
+	return MIX_REGEXES.some(function(mix) {
+		if (name.match(mix) !== null) {
+			return true;
+		}
+	});
+}
+
+function getNameSections(name) {
+	var OPENING_OR_CLOSING = /[()[\]{}]|\*\*/;
+	var CLOSING_MATCH = {
+		')':  '(',
+		']':  '[',
+		'}':  '{',
+		'**': '**'
+	};
+
+	//Split off anything in parens
+	var matches = [];
+	var sections = [];
+
+	var start = 0;
 	var match;
+	while ((match = name.substring(start).match(OPENING_OR_CLOSING)) !== null) {
+		//Matched an open paren, find the nearest closing
+		start += match.index + match[0].length;
 
-	if ((match = name.match(ALBUM_SUFFIX_REGEX)) !== null) {
-		//Need to clear out the (SHOW 123) from the track's name
-		name = name.replace(ALBUM_SUFFIX_REGEX, '');
-		track.albumSuffix = match[1];
-	}
+		var type = match[0];
+		var open = true;
+		var lastMatch = matches.length > 0 ? matches[matches.length - 1] : {type: ''};
 
-	if ((match = name.match(MIX_SUFFIX_DASH_REGEX)) !== null) {
-		//Also clean off any - Mix stuff
-		name = name.replace(MIX_SUFFIX_DASH_REGEX, '');
-		track.mixSuffix = match[1];
-	} else if ((match = name.match(MIX_SUFFIX_PARENS_REGEX)) !== null) {
-		//Some people do it like this though
-		name = name.replace(MIX_SUFFIX_PARENS_REGEX, '');
-		track.mixSuffix = match[1];
-	} else {
-		track.mixSuffix = '';
-	}
+		if (type === '**') {
+			//Thanks, Armin
+			open = lastMatch.type !== '**';
+		} else if (typeof(CLOSING_MATCH[type]) !== 'undefined') {
+			type = CLOSING_MATCH[type];
+			open = false;
+		}
 
-	if ((match = name.match(SPECIAL_SUFFIX_REGEX)) !== null) {
-		//Also sometimes people put special things in [brackets] or in ** double asterisks **
-		name = name.replace(SPECIAL_SUFFIX_REGEX, '');
-		//Could be either match
-		track.specialSuffix = typeof(match[2]) === 'undefined' ? match[3] : match[2];
-	}
-	//More?
-	if ((match = name.match(SPECIAL_SUFFIX_REGEX)) !== null) {
-		track.specialSuffixes = [track.specialSuffix];
-		//How many special suffixes do you need? I think the most I've seen is 2 but never hurts
-		while ((match = name.match(SPECIAL_SUFFIX_REGEX)) !== null) {
-			//Also sometimes people put special things in [brackets] or in ** double asterisks **
-			name = name.replace(SPECIAL_SUFFIX_REGEX, '');
-			//Could be either match
-			track.specialSuffixes.push(typeof(match[2]) === 'undefined' ? match[3] : match[2]);
+		if (open) {
+			matches.push({
+				type: type,
+				start: start
+			});
+		} else {
+			//I thought I was going to care about bracket matching.
+			// Then Armin wrote "[ASOT 728)"
+			if (lastMatch.type !== type) {
+				//Invalid format
+				console.error('Mismatched brackets! Name: ' + name);
+			}
+
+			//Do it anyway, if we can
+			if (matches.length > 0) {
+				//Pop this off
+				var innerStr = name.substring(lastMatch.start, start - type.length);
+
+				//Take it out of the input string so we don't bother with it again
+				name = name.substring(0, lastMatch.start - lastMatch.type.length) + name.substring(start);
+				start = lastMatch.start - lastMatch.type.length;
+
+				sections.push(innerStr);
+				matches.pop();
+			}
 		}
 	}
 
-	track.name = name.trim();
+	//See if they have a mix suffix
+	var suffixStart = name.length;
+	while ((suffixStart = name.lastIndexOf(' - ', suffixStart - 1)) !== -1) {
+		var mixSuffix = name.substring(suffixStart + ' - '.length);
+
+		//Do this here too because isMixType might get confused about extra spaces
+		mixSuffix = mixSuffix.replace(/\s\s+/g, ' ').trim();
+		if (!isMixType(mixSuffix)) {
+			continue;
+		}
+
+		//Get that too
+		sections.push(mixSuffix);
+		name = name.substring(0, suffixStart);
+	}
+
+	//Do we still have something open? Armin please stop making spelling errors
+	// e.g. "Flowtation [ASOT 285] **ASOT Radio Classic - Original Mix"
+	while (matches.length > 0) {
+		//Augh, just pretend it goes all the way to the end
+		lastMatch = matches[matches.length - 1];
+		innerStr = name.substring(lastMatch.start);
+
+		//Take it out of the input string so we don't bother with it again
+		name = name.substring(0, lastMatch.start - lastMatch.type.length);
+
+		sections.push(innerStr);
+		matches.pop();
+	}
+
+	//Clear extra spaces
+	name = name.replace(/\s\s+/g, ' ').trim();
+
+	//Some cleanup on the sections
+	sections = sections.map(function(section) {
+		return section.replace('/\s\s+/g', ' ').trim() //Fix weird spaces
+			.replace(/^[([{]/, '').replace(/[)\]}]$/, '') //Fix starting or ending with a paren
+			.replace(/^\*\*/, '').replace(/\*\*$/, '') //Because Armin is special
+	}).unique().filter(function(section) {
+		return section !== '';
+	});
+
+	return {name: name, sections: sections};
 }
 
 function getOpenURL(uri) {

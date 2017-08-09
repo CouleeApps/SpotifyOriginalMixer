@@ -36,7 +36,11 @@
 
 	function loadPlaylist(playlist) {
 		//Cancel anything we were doing
-		window.stop();
+		if (window.stop !== undefined) {
+			window.stop();
+		} else if(document.execCommand !== undefined) {
+			document.execCommand("Stop", false);
+		}
 
 		//Clear the list of songs to prepare for the new one
 		var $foundList = $('#track-list');
@@ -66,7 +70,6 @@
 			//Get track and album data
 			radioTracks.map(function(track) {
 				extractName(track);
-				extractName(track.album);
 
 				track.hasRadio = track.radio;
 				track.hasExtended = !track.radio;
@@ -84,20 +87,6 @@
 			radioTracks.forEach(function(track) {
 				track.row = $(radioTemplate(track));
 				$foundList.append(track.row);
-				track.row.click(function() {
-					findExtendedMix(api, track).then(function(radioTrack) {
-						track.hasExtended = !track.radio;
-						track.hasRadio = radioTrack.radio;
-						track.failed = track.hasRadio && !track.hasExtended;
-
-						if (radioTrack.radio) {
-							track.radioUri = radioTrack.uri;
-						}
-
-						var $trackRow = $('#track-' + radioTrack.id);
-						$trackRow.replaceWith(radioTemplate(track));
-					});
-				});
 			});
 
 			var $extendButton = $('#extend');

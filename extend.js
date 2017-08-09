@@ -67,9 +67,9 @@ function findExtendedMix(api, radioTrack) {
 				}
 
 				//Try erasing 'Mix'/'Remix'
-				mix = replaceMulti(mix, [' Remix', ' Mix', ' Bootleg', ' Version', ' Edit']);
+				mix = replaceMulti(mix, [' Remix', ' Mix', ' Bootleg', ' Version', ' Edit', ' Revamp', ' Rework', ' Fix', ' Play']);
 				searchTracks = searchTracks.map(function(track) {
-					track.testMixSuffix = replaceMulti(track.testMixSuffix, [' Remix', ' Mix', ' Bootleg', ' Version', ' Edit']);
+					track.testMixSuffix = replaceMulti(track.testMixSuffix, [' Remix', ' Mix', ' Bootleg', ' Version', ' Edit', ' Revamp', ' Rework', ' Fix', ' Play']);
 					return track;
 				});
 

@@ -99,13 +99,14 @@
                 <img class="album-image" src="{{album-image 64}}" alt="{{album.name}}">
                 <span class="track-name">{{name}}</span>
                 <span class="track-mix">{{mixSuffix}}</span>
+                <span class="track-artist">
                 {{#each-list artists}}
-                    <span class="track-artist">{{name}}, </span>
+                    {{name}},
                 {{else}}
-                    <span class="track-artist">{{name}}</span>
+                    {{name}}
                 {{/each-list}}
+                </span>
             </div>
-            <div class="spacer"></div>
             {{#if hasRadio}}
                 <div class="radio-version">
                     <a class="track-link" href="{{track-url radioUri}}">Radio</a>
