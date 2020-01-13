@@ -1,0 +1,39 @@
+{% if failed %}
+  {% set track_class = "track unfound" %}
+{% else %}
+  {% set track_class = "track" %}
+{% endif %}
+
+<div class="{{ track_class }}" id="track-{{ id }}">
+  <div class="track-info">
+    <img class="album-image" src="{{ albumImage64 }}" alt="{{ album.name }}">
+    <span class="track-name">{{ name }}</span>
+    <span class="track-mix">{{ mixSuffix }}</span>
+    <span class="track-artist">
+      {% for artist in artists -%}
+        {%- if loop.index != 1 -%}
+        ,
+        {% endif %}
+        {{ artist.name -}}
+      {%- endfor %}
+    </span>
+  </div>
+  {% if hasRadio %}
+    <div class="radio-version">
+      <a class="track-link" href="{{ trackRadioURL }}">Radio</a>
+    </div>
+  {% else %}
+    <div class="radio-version loading">
+      <span class="preview-text">Radio</span>
+    </div>
+  {% endif %}
+  {% if hasExtended %}
+    <div class="extended-version">
+      <a class="track-link" href="{{ trackURL }}">Extended</a>
+    </div>
+  {% else %}
+    <div class="extended-version loading">
+      <span class="preview-text">Extended</span>
+    </div>
+  {% endif %}
+</div>

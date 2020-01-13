@@ -41,8 +41,8 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
-    <!-- Handlebars -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.10/handlebars.min.js"></script>
+    <!-- Templating -->
+    <script src="./thirdparty/twig.min.js"></script>
 
     <!-- Libraries -->
     <script src="thirdparty/q.js"></script>
@@ -51,8 +51,9 @@
 
     <!-- Mixer base -->
     <script src="playlist.js"></script>
-    <script src="extend.js"></script>
     <script src="track.js"></script>
+    <script src="extend.js"></script>
+    <script src="nameParser.js"></script>
     <link rel="stylesheet" href="mixer.css">
 </head>
 <body>
@@ -75,58 +76,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Templates -->
-    <script id="loading-bar-template" type="text/x-handlebars-template">
-        <div class="progress">
-            <div class="progress-bar" style="width: 0" id="loadingProgress"></div>
-        </div>
-    </script>
-
-    <script id="playlist-list-template" type="text/x-handlebars-template">
-        <div class="playlist">
-            {{name}}
-        </div>
-    </script>
-
-    <script id="radio-list-template" type="text/x-handlebars-template">
-        {{#if failed}}
-            <div class="track unfound" id="track-{{id}}">
-        {{else}}
-            <div class="track" id="track-{{id}}">
-        {{/if}}
-            <div class="track-info">
-                <img class="album-image" src="{{album-image 64}}" alt="{{album.name}}">
-                <span class="track-name">{{name}}</span>
-                <span class="track-mix">{{mixSuffix}}</span>
-                <span class="track-artist">
-                {{#each-list artists}}
-                    {{name}},
-                {{else}}
-                    {{name}}
-                {{/each-list}}
-                </span>
-            </div>
-            {{#if hasRadio}}
-                <div class="radio-version">
-                    <a class="track-link" href="{{track-url radioUri}}">Radio</a>
-                </div>
-            {{else}}
-                <div class="radio-version loading">
-                    <span class="preview-text">Radio</span>
-                </div>
-            {{/if}}
-            {{#if hasExtended}}
-                <div class="extended-version">
-                    <a class="track-link" href="{{track-url uri}}">Extended</a>
-                </div>
-            {{else}}
-                <div class="extended-version loading">
-                    <span class="preview-text">Extended</span>
-                </div>
-            {{/if}}
-        </div>
-    </script>
 
     <!-- Scripts at the end so the DOM exists for them -->
     <script src="mixer.js"></script>

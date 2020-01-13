@@ -4,18 +4,6 @@ Array.prototype.diff = function(a) {
 	});
 };
 
-Handlebars.registerHelper('each-list', function(list, options) {
-	var ret = '';
-	for (var i = 0, j = list.length; i < j; i ++) {
-		if (i === j - 1) {
-			ret = ret + options.inverse(list[i]);
-		} else {
-			ret = ret + options.fn(list[i]);
-		}
-	}
-	return ret;
-});
-
 //https://gist.github.com/andrei-m/982927
 function levenshtein(a, b){
 	var tmp;
@@ -37,57 +25,49 @@ function levenshtein(a, b){
 	return res;
 }
 
-function loadList(cb, max, offset, progress) {
+async function loadList(cb, max, offset, progress) {
 	//Start at the start if we don't care
-	if (typeof(offset) === 'undefined') {
+	if (typeof (offset) === 'undefined') {
 		offset = 0;
 	}
 
 	var MAX_LIMIT = 50;
+	if (typeof (max) === 'undefined') {
+		max = Infinity;
+	}
 	var list = [];
 
-	function _loadPart(accept, reject, offset, limit, max) {
-		//Poll the API
-		return cb({
+	//Poll the API
+	while (offset < max) {
+		var limit = Math.min(MAX_LIMIT, max - offset);
+		let data = await cb({
 			limit: limit,
 			offset: offset
-		}).then(function(data) {
-			if (typeof(data.tracks) !== 'undefined') {
-				//Because this has all the info
-				data = data.tracks;
-			}
+		});
+		//Don't go beyond the total
+		max = Math.min(max, data.total);
 
-			//Add all the items to the list array
-			if (typeof(data.items) !== 'undefined') {
-				//Append all from data.items into list
-				Array.prototype.push.apply(list, data.items);
-			}
+		if (typeof (data.tracks) !== 'undefined') {
+			//Because this has all the info
+			data = data.tracks;
+		}
 
-			//Load all if we haven't specified a max
-			if (typeof(max) === 'undefined') {
-				max = data.total;
-			}
+		//Add all the items to the list array
+		if (typeof (data.items) !== 'undefined') {
+			//Append all from data.items into list
+			Array.prototype.push.apply(list, data.items);
+		}
 
-			//Find what the parameters for the next request are
-			var offset = data.offset + data.limit;
-			var limit = Math.min(data.limit, Math.min(max, data.total) - offset);
-			if (limit <= 0) {
-				return accept(list);
-			}
+		//Find what the parameters for the next request are
+		offset = data.offset + data.limit;
 
-			//Progress update event
-			if (typeof(progress) !== 'undefined') {
-				progress(offset / max);
-			}
-
-			//And send it off (async recursion woo)
-			return _loadPart(accept, reject, offset, limit, max);
-		}, reject);
+		//Progress update event
+		if (typeof (progress) !== 'undefined') {
+			progress(offset / max);
+		}
 	}
 
-	return new Promise(function(accept, reject) {
-		return _loadPart(accept, reject, offset, MAX_LIMIT, max);
-	});
+	return list;
 }
 
 /**
@@ -100,31 +80,17 @@ function loadList(cb, max, offset, progress) {
  *                 Parameters are (original value, mapped value)
  * @returns {Promise}
  */
-Q.map = function(array, fn, progress) {
-	var result = [];
-	//Copy the array so we don't mutate the one they give us
-	var copy = array.slice();
+Q.map = async function(array, fn, progress) {
+	let result = [];
+	for (let item of array) {
+		let mapped = await fn(item);
+		result.push(mapped);
 
-	function _map(accept, reject) {
-		//End of the list so accept and we're done
-		if (copy.length === 0) {
-			return accept(result);
-		}
-		//Fire up the promise for the next item on the list
-		var next = copy.shift();
-		return fn(next).then(function(mapped) {
-			//Got the result of this, add to the list
-			result.push(mapped);
-
-			//Fire progress callback if we have it
-			if (typeof(progress) !== "undefined")
-				progress(next, mapped);
-
-			return _map(accept, reject);
-		}, reject);
+		//Fire progress callback if we have it
+		if (typeof(progress) !== "undefined")
+			progress(item, mapped);
 	}
-
-	return new Promise(_map);
+	return result;
 };
 
 /**
@@ -133,23 +99,10 @@ Q.map = function(array, fn, progress) {
  * @param fn    Function to process item
  * @returns {Promise}
  */
-Q.forEach = function(array, fn) {
-	//Copy the array so we don't mutate the one they give us
-	var copy = array.slice();
-
-	function _foreach(accept, reject) {
-		//End of the list so accept and we're done
-		if (copy.length === 0) {
-			return accept();
-		}
-		//Fire up the promise for the next item on the list
-		var next = copy.shift();
-		return fn(next).then(function() {
-			return _foreach(accept, reject);
-		}, reject);
+Q.forEach = async function(array, fn) {
+	for (let item of array) {
+		await fn(item);
 	}
-
-	return new Promise(_foreach);
 };
 
 Array.prototype.chunk = function(count) {
@@ -178,4 +131,37 @@ if (!String.prototype.endsWith) {
 		return this.substr(Position - searchStr.length,
 			searchStr.length) === searchStr;
 	};
+}
+
+/**
+ * Asynchronously load all of the templates
+ * Thanks, Kevin
+ * @param {array} templates
+ * @return {Promise}
+ */
+function loadTemplates(templates) {
+  var promises = [];
+  templates.forEach(function (template) {
+    promises.push(new Q.Promise(function (resolve, reject) {
+      Twig.twig({
+        id: template.id,
+        href: template.href,
+        allowInlineIncludes: true,
+        async: true,
+        error: function () {
+          reject();
+        },
+        load: function () {
+          resolve(Twig.twig({ref: template.id}));
+        }
+      });
+    }));
+  });
+  return Q.all(promises).then((results) => {
+    let object = [];
+    for (let result of results) {
+      object[result.id] = result;
+    }
+    return object;
+  });
 }
