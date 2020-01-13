@@ -71,6 +71,10 @@ function isRadioTrack(track) {
 	if (track.name.indexOf('Radio Edit') !== -1) {
 		return true;
 	}
+	//Etc etc - live (these are generally not what we want)
+	if (track.name.match(/\blive$/i) !== null) {
+		return true;
+	}
 
 	return false;
 }

@@ -2,7 +2,7 @@
 
 	function login(callback) {
 		var CLIENT_ID = '6acbd4cc5e97489197f1112526507d4d';
-		var REDIRECT_URI = 'https://couleeapps.github.io/SpotifyOriginalMixer/auth.html';
+		var REDIRECT_URI = window.location.href.replace("login.html", "auth.html");
 		function getLoginURL(scopes) {
 			return 'https://accounts.spotify.com/authorize?client_id=' + CLIENT_ID +
 				'&redirect_uri=' + encodeURIComponent(REDIRECT_URI) +

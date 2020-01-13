@@ -98,7 +98,7 @@ function loadList(cb, max, offset, progress) {
  *                 mapped value as the only argument.
  * @param progress Optional progress function that is called after each iteration of fn.
  *                 Parameters are (original value, mapped value)
- * @returns {promise|*}
+ * @returns {Promise}
  */
 Q.map = function(array, fn, progress) {
 	var result = [];
@@ -131,7 +131,7 @@ Q.map = function(array, fn, progress) {
  * Asynchronously (but not in parallel) apply a function to every item in an array.
  * @param array Input array of items
  * @param fn    Function to process item
- * @returns {promise|*}
+ * @returns {Promise}
  */
 Q.forEach = function(array, fn) {
 	//Copy the array so we don't mutate the one they give us

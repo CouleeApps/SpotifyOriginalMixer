@@ -123,7 +123,7 @@
 
 							//List of URIs of all the tracks to add
 							var addUris = extendedList.filter(function(track) {
-								return isRadioTrack(track);
+								return !isRadioTrack(track);
 							}).map(function(track) { //Get Uri
 								return track.uri;
 							}).chunk(100); //Chunks of 100 at a time

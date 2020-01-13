@@ -38,6 +38,7 @@ function findExtendedMix(api, radioTrack) {
 					case 'Extended Version': //Armin stop
 					case 'Extended': //Ferry Corsten why have you done this
 					case 'Radio Edit':
+					case 'Intro Mix': //Some albums do this
 					case '':
 						//See if any of those work
 						test = filterMixSuffix(searchTracks, 'Original Mix'); if (test.length > 0) return test;
@@ -45,6 +46,7 @@ function findExtendedMix(api, radioTrack) {
 						test = filterMixSuffix(searchTracks, 'Extended Remix'); if (test.length > 0) return test;
 						test = filterMixSuffix(searchTracks, 'Extended Version'); if (test.length > 0) return test;
 						test = filterMixSuffix(searchTracks, 'Extended'); if (test.length > 0) return test;
+						test = filterMixSuffix(searchTracks, 'Intro Mix'); if (test.length > 0) return test;
 						test = filterMixSuffix(searchTracks, ''); if (test.length > 0) return test;
 						break;
 					case 'Club Mix':
@@ -54,6 +56,12 @@ function findExtendedMix(api, radioTrack) {
 						test = filterMixSuffix(searchTracks, 'Club Remix'); if (test.length > 0) return test;
 						break;
 					default:
+						//Someone's Mix -> Someone's Extended Mix
+						var fancyExtend = mix.split(" ");
+						fancyExtend.splice(-1, 0, 'Extended');
+						fancyExtend = fancyExtend.join(' ');
+
+						test = filterMixSuffix(searchTracks, fancyExtend); if (test.length > 0) return test;
 						test = filterMixSuffix(searchTracks, mix); if (test.length > 0) return test;
 						break;
 				}
