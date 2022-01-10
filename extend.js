@@ -3,6 +3,10 @@ var NON_ALPHA_REGEX = /[^a-zA-Z]/g;
 async function findExtendedMix(api, radioTrack) {
 	var query = 'track:' + radioTrack.name + ' artist:' + radioTrack.artists[0].name;
 	let searchTracks = await loadList(api.searchTracks.bind(api, query), 100);
+	if (searchTracks.length === 0) {
+		query = 'track:' + radioTrack.name.replaceAll(NON_ALPHA_REGEX, '') + ' artist:' + radioTrack.artists[0].name.replaceAll(NON_ALPHA_REGEX, '');
+		searchTracks = await loadList(api.searchTracks.bind(api, query), 100);	
+	}
 	//This would be super useless if the extended mix gave you a radio track
 	searchTracks = searchTracks.filter(function(track) {
 		return !isRadioTrack(track);
