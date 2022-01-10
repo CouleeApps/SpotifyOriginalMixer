@@ -163,7 +163,9 @@ class Mixer {
 		extendedPlaylist = new Playlist(response);
 
 		//List of URIs of all the tracks to add
-		let addUris = extendedList.filter(function (track) {
+		let addUris = extendedList.map(function (track) {
+			return track.extended;
+		}).filter(function (track) {
 			return !isRadioTrack(track);
 		}).map(function (track) { //Get Uri
 			return track.uri;
@@ -184,7 +186,7 @@ class Mixer {
 
 		//List of URIs of all the tracks to add
 		let addUris = extendedList.map(function (track) {
-			return track.uri;
+			return track.extended.uri;
 		}).chunk(100);
 
 		await Q.forEach(oldUris, playlist.removeTracksFn(this.api)).then(function () {
