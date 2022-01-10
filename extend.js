@@ -1,11 +1,11 @@
 var NON_ALPHA_REGEX = /[^a-zA-Z]/g;
-var NON_ALPHA_SPACE_REGEX = /[^a-zA-Z ]/g;
+var NON_ALNUM_SPACE_REGEX = /[^a-zA-Z0-9 ]/g;
 
 async function findExtendedMix(api, radioTrack) {
 	var query = 'track:' + radioTrack.name + ' artist:' + radioTrack.artists[0].name;
 	let searchTracks = await loadList(api.searchTracks.bind(api, query), 100);
 	if (searchTracks.length === 0) {
-		query = 'track:' + radioTrack.name.replaceAll(NON_ALPHA_SPACE_REGEX, '') + ' artist:' + radioTrack.artists[0].name.replaceAll(NON_ALPHA_SPACE_REGEX, '');
+		query = 'track:' + radioTrack.name.replaceAll(NON_ALNUM_SPACE_REGEX, '') + ' artist:' + radioTrack.artists[0].name.replaceAll(NON_ALNUM_SPACE_REGEX, '');
 		searchTracks = await loadList(api.searchTracks.bind(api, query), 100);	
 	}
 	//This would be super useless if the extended mix gave you a radio track
