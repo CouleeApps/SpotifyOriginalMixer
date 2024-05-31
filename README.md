@@ -1,5 +1,5 @@
 # Original Mixer
-Have you ever had this problem? ![](https://image.prntscr.com/image/1FGjWnUmSrWTR2iZNcbqFQ.jpeg)
+Have you ever had this problem? <img width="815" alt="image" src="https://github.com/CouleeApps/SpotifyOriginalMixer/assets/711973/483bfa48-b8a4-49e6-a046-4694271b4ea2">
 
 When I liked a song I heard on a radio show, I added it to my saved songs -- but I added the version with all the talking!
 Trying to find the original mixes of all of those songs would take like an hour of mindless searching and comparing...
